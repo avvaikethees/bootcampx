@@ -11,13 +11,20 @@ const pool = new Pool({
 // the function then returns a promise that contains our result when the query is successful
 // when we make the query from a JS application, the results come back as a JS object. 
 //Once the .then(res => {} ) gets executed, we're not dealing with SQL or the database anymore, we're just dealing with JS objects
-pool.query(`
+const queryString = `
 SELECT students.id as student_id, students.name as name, cohorts.name as cohort
 FROM students
 JOIN cohorts ON cohorts.id=cohort_id
-WHERE cohorts.name LIKE '%${process.argv[2]}%'
-LIMIT ${process.argv[3] || 5};
-`)
+WHERE cohorts.name LIKE $1
+LIMIT $2;
+`
+
+const cohortname = process.argv[2];
+const limit = process.argv[3] || 5;
+
+const values = [`%${cohortname}%`, limit];
+
+pool.query(queryString, values)
 .then(res => {
   res.rows.forEach(user => {
     console.log(`${user.name} has an id of ${user.student_id} and was in the ${user.cohort} cohort`);
